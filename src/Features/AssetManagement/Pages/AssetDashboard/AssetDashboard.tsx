@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect } from "react"
+import { Fragment, useState, useEffect, useCallback } from "react"
 import { Dialog, Menu, Transition } from "@headlessui/react"
 import {
   ArrowLeftOnRectangleIcon,
@@ -72,43 +72,27 @@ const AssetDashboard = (props: IAssetDashboardProps) => {
     if (!convert.isReady) readyConvert()
   }, [convert.isReady])
 
-  const option = !userDetails
+  const getRealizedPL = useCallback(
+    () => assets?.data?.reduce((acc: number, curr: IAsset) => curr.realizedPl + acc, 0),
+    [assets?.data, assetsLoading]
+  )
+
+  const getUnealizedPL = useCallback(
+    () => assets?.data?.reduce((acc: number, curr: IAsset) => curr.unrealizedPl + acc, 0),
+    [assets?.data, assetsLoading]
+  )
+
+  const getTotalPL = useCallback(
+    () => assets?.data?.reduce((acc: number, curr: IAsset) => curr.totalPl + acc, 0),
+    [assets?.data, assetsLoading]
+  )
+
+  const option = !assets?.data
     ? {
         series: [
           {
             type: "treemap",
-            data: [
-              {
-                name: "nodeA", // First tree
-                value: 10,
-                children: [
-                  {
-                    name: "nodeAa", // First leaf of first tree
-                    value: 4,
-                  },
-                  {
-                    name: "nodeAb", // Second leaf of first tree
-                    value: 6,
-                  },
-                ],
-              },
-              {
-                name: "nodeB", // Second tree
-                value: 20,
-                children: [
-                  {
-                    name: "nodeBa", // Son of first tree
-                    value: 20,
-                    children: [
-                      {
-                        name: "nodeBa1", // Granson of first tree
-                        value: 20,
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
+            data: [],
           },
         ],
       }
@@ -118,35 +102,29 @@ const AssetDashboard = (props: IAssetDashboardProps) => {
             type: "treemap",
             data: [
               {
-                name: "Net Worth", // First tree
-                value: netWorth,
-                children: [
-                  {
-                    name: "Realized Returns", // First leaf of first tree
-                    value: Number(userDetails.data?.realizedReturns),
-                  },
-                  {
-                    name: "Unrealized Returns", // Second leaf of first tree
-                    value: Number(userDetails.data?.unrealizedReturns),
-                  },
-                ],
+                name: "Realized P&L",
+                value: getRealizedPL(),
+                children: assets?.data?.map((asset: IAsset) => ({
+                  name: asset.asset_name,
+                  value: Number(asset.realizedPl),
+                })),
               },
-              // {
-              //   name: "nodeB", // Second tree
-              //   value: 20,
-              //   children: [
-              //     {
-              //       name: "nodeBa", // Son of first tree
-              //       value: 20,
-              //       children: [
-              //         {
-              //           name: "nodeBa1", // Granson of first tree
-              //           value: 20,
-              //         },
-              //       ],
-              //     },
-              //   ],
-              // },
+              {
+                name: "Unrealized P&L",
+                value: getUnealizedPL(),
+                children: assets?.data?.map((asset: IAsset) => ({
+                  name: asset.asset_name,
+                  value: Number(asset.unrealizedPl),
+                })),
+              },
+              {
+                name: "Total P&L",
+                value: getTotalPL(),
+                children: assets?.data?.map((asset: IAsset) => ({
+                  name: asset.asset_name,
+                  value: Number(asset.totalPl),
+                })),
+              },
             ],
           },
         ],
